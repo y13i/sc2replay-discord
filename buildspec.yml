@@ -1,0 +1,24 @@
+version: 0.2
+env:
+  parameter-store:
+    DOCKERHUB_USERNAME: "/default/DOCKERHUB_USERNAME"
+    DOCKERHUB_PASSWORD: "/default/DOCKERHUB_PASSWORD"
+phases:
+  install:
+    runtime-versions:
+      docker: 18
+  pre_build:
+    commands:
+      - export IMAGE_REFERENCE="$REGISTRY_URL/$REPOSITORY_NAME:$CODEBUILD_RESOLVED_SOURCE_VERSION"
+      - docker login -u $DOCKERHUB_USERNAME -p $DOCKERHUB_PASSWORD
+  build:
+    commands:
+      - docker build -t $IMAGE_REFERENCE .
+      - aws ecr get-login-password | docker login --username AWS --password-stdin $REGISTRY_URL
+      - docker push $IMAGE_REFERENCE
+      - |
+        echo "{\"Parameters\": {\"ContainerImage\": \"$IMAGE_REFERENCE\", \"BuildNumber\": \"$CODEBUILD_BUILD_NUMBER\", \"BuiltAt\": \"$CODEBUILD_START_TIME\", \"SourceVersion\": \"$CODEBUILD_RESOLVED_SOURCE_VERSION\"}}" > cfnConfiguration.json
+artifacts:
+  name: cfnConfiguration
+  files:
+    - cfnConfiguration.json

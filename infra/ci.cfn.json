@@ -1,0 +1,478 @@
+{
+  "Parameters": {
+    "AppStackName": {
+      "Type": "String"
+    },
+    "GithubConnectionArn": {
+      "Type": "String"
+    },
+    "FullRepositoryId": {
+      "Type": "String",
+      "Description": "GitubUserName/RepoName"
+    },
+    "BranchName": {
+      "Type": "String",
+      "Default": "main"
+    },
+    "SlackChannelId": {
+      "Type": "String",
+      "Description": "To get the ID, open Slack, right click on the channel name in the left pane, then choose Copy Link. The channel ID is the 9-character string at the end of the URL. For example, ABCBBLZZZ."
+    },
+    "SlackWorkspaceId": {
+      "Type": "String",
+      "Description": "To get the workspace ID, you must perform the initial authorization flow with Slack in the AWS Chatbot console. Then you can copy and paste the workspace ID from the console."
+    }
+  },
+  "Resources": {
+    "Repository": {
+      "Type": "AWS::ECR::Repository",
+      "Properties": {
+        "RepositoryName": { "Ref": "AWS::StackName" },
+        "LifecyclePolicy": {
+          "LifecyclePolicyText": {
+            "Fn::Join": [
+              "",
+              [
+                "{",
+                "  \"rules\": [",
+                "    {",
+                "      \"rulePriority\": 1,",
+                "      \"selection\": {",
+                "        \"tagStatus\": \"any\",",
+                "        \"countType\": \"imageCountMoreThan\",",
+                "        \"countNumber\": 3",
+                "      },",
+                "      \"action\": {",
+                "        \"type\": \"expire\"",
+                "      }",
+                "    }",
+                "  ]",
+                "}"
+              ]
+            ]
+          }
+        }
+      }
+    },
+    "PipelineRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": { "Fn::Sub": "codepipeline.${AWS::URLSuffix}" }
+              },
+              "Action": "sts:AssumeRole"
+            }
+          ]
+        },
+        "ManagedPolicyArns": [{ "Ref": "PipelineRolePolicy" }]
+      }
+    },
+    "PipelineRolePolicy": {
+      "Type": "AWS::IAM::ManagedPolicy",
+      "Properties": {
+        "PolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Action": ["codestar-connections:UseConnection"],
+              "Resource": { "Ref": "GithubConnectionArn" }
+            },
+            {
+              "Effect": "Allow",
+              "Action": [
+                "cloudformation:CreateStack",
+                "cloudformation:DeleteStack",
+                "cloudformation:DescribeStacks",
+                "cloudformation:UpdateStack",
+                "cloudformation:CreateChangeSet",
+                "cloudformation:DeleteChangeSet",
+                "cloudformation:DescribeChangeSet",
+                "cloudformation:ExecuteChangeSet",
+                "cloudformation:SetStackPolicy",
+                "cloudformation:ValidateTemplate"
+              ],
+              "Resource": "*"
+            },
+            {
+              "Effect": "Allow",
+              "Action": ["s3:*"],
+              "Resource": [
+                { "Fn::Sub": "${Bucket.Arn}" },
+                { "Fn::Sub": "${Bucket.Arn}/*" }
+              ]
+            },
+            {
+              "Effect": "Allow",
+              "Action": ["iam:PassRole"],
+              "Resource": { "Fn::GetAtt": ["CfnRole", "Arn"] }
+            },
+            {
+              "Effect": "Allow",
+              "Action": ["codebuild:StartBuild", "codebuild:BatchGet*"],
+              "Resource": { "Fn::GetAtt": ["BuildProject", "Arn"] }
+            }
+          ]
+        }
+      }
+    },
+    "Bucket": {
+      "Type": "AWS::S3::Bucket",
+      "Properties": {
+        "LifecycleConfiguration": {
+          "Rules": [
+            {
+              "ExpirationInDays": 1,
+              "Status": "Enabled"
+            }
+          ]
+        }
+      }
+    },
+    "BucketPolicy": {
+      "Type": "AWS::S3::BucketPolicy",
+      "Properties": {
+        "Bucket": { "Ref": "Bucket" },
+        "PolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Sid": "DenyNotEncrypted",
+              "Action": "s3:*",
+              "Effect": "Deny",
+              "Resource": [
+                { "Fn::Sub": "${Bucket.Arn}" },
+                { "Fn::Sub": "${Bucket.Arn}/*" }
+              ],
+              "Condition": {
+                "Bool": {
+                  "aws:SecureTransport": "false"
+                }
+              },
+              "Principal": "*"
+            }
+          ]
+        }
+      }
+    },
+    "Pipeline": {
+      "Type": "AWS::CodePipeline::Pipeline",
+      "Properties": {
+        "Name": { "Ref": "AWS::StackName" },
+        "RoleArn": { "Fn::GetAtt": ["PipelineRole", "Arn"] },
+        "ArtifactStore": {
+          "Type": "S3",
+          "Location": { "Ref": "Bucket" }
+        },
+        "Stages": [
+          {
+            "Name": "Source",
+            "Actions": [
+              {
+                "Name": "GitHub",
+                "ActionTypeId": {
+                  "Category": "Source",
+                  "Owner": "AWS",
+                  "Provider": "CodeStarSourceConnection",
+                  "Version": "1"
+                },
+                "Configuration": {
+                  "ConnectionArn": {
+                    "Ref": "GithubConnectionArn"
+                  },
+                  "FullRepositoryId": {
+                    "Ref": "FullRepositoryId"
+                  },
+                  "BranchName": {
+                    "Ref": "BranchName"
+                  }
+                },
+                "OutputArtifacts": [{ "Name": "appSource" }]
+              }
+            ]
+          },
+          {
+            "Name": "Build",
+            "Actions": [
+              {
+                "Name": "CodeBuild",
+                "ActionTypeId": {
+                  "Category": "Build",
+                  "Owner": "AWS",
+                  "Provider": "CodeBuild",
+                  "Version": "1"
+                },
+                "Configuration": {
+                  "ProjectName": { "Ref": "BuildProject" },
+                  "EnvironmentVariables": {
+                    "Fn::Join": [
+                      "",
+                      [
+                        "[",
+                        "  {",
+                        "    \"name\": \"REGISTRY_URL\",",
+                        {
+                          "Fn::Sub": "    \"value\": \"${AWS::AccountId}.dkr.ecr.${AWS::Region}.${AWS::URLSuffix}\""
+                        },
+                        "  },",
+                        "  {",
+                        "    \"name\": \"REPOSITORY_NAME\",",
+                        {
+                          "Fn::Sub": "    \"value\": \"${Repository}\""
+                        },
+                        "  }",
+                        "]"
+                      ]
+                    ]
+                  }
+                },
+                "InputArtifacts": [{ "Name": "appSource" }],
+                "OutputArtifacts": [{ "Name": "cfnConfiguration" }]
+              }
+            ]
+          },
+          {
+            "Name": "Deploy",
+            "Actions": [
+              {
+                "Name": "CloudFormation",
+                "ActionTypeId": {
+                  "Category": "Deploy",
+                  "Owner": "AWS",
+                  "Provider": "CloudFormation",
+                  "Version": "1"
+                },
+                "Configuration": {
+                  "ActionMode": "CREATE_UPDATE",
+                  "Capabilities": "CAPABILITY_IAM",
+                  "RoleArn": { "Fn::GetAtt": ["CfnRole", "Arn"] },
+                  "StackName": { "Ref": "AppStackName" },
+                  "TemplatePath": "appSource::infra/app.cfn.json",
+                  "TemplateConfiguration": "cfnConfiguration::cfnConfiguration.json"
+                },
+                "InputArtifacts": [
+                  { "Name": "appSource" },
+                  { "Name": "cfnConfiguration" }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "PipelineNotificationRule": {
+      "Type": "AWS::CodeStarNotifications::NotificationRule",
+      "Properties": {
+        "Name": { "Ref": "AWS::StackName" },
+        "Status": "ENABLED",
+        "DetailType": "FULL",
+        "Resource": {
+          "Fn::Sub": "arn:aws:codepipeline:${AWS::Region}:${AWS::AccountId}:${Pipeline}"
+        },
+        "EventTypeIds": [
+          "codepipeline-pipeline-action-execution-succeeded",
+          "codepipeline-pipeline-action-execution-failed",
+          "codepipeline-pipeline-action-execution-canceled",
+          "codepipeline-pipeline-action-execution-started",
+          "codepipeline-pipeline-stage-execution-started",
+          "codepipeline-pipeline-stage-execution-succeeded",
+          "codepipeline-pipeline-stage-execution-resumed",
+          "codepipeline-pipeline-stage-execution-canceled",
+          "codepipeline-pipeline-stage-execution-failed",
+          "codepipeline-pipeline-pipeline-execution-failed",
+          "codepipeline-pipeline-pipeline-execution-canceled",
+          "codepipeline-pipeline-pipeline-execution-started",
+          "codepipeline-pipeline-pipeline-execution-resumed",
+          "codepipeline-pipeline-pipeline-execution-succeeded",
+          "codepipeline-pipeline-pipeline-execution-superseded",
+          "codepipeline-pipeline-manual-approval-failed",
+          "codepipeline-pipeline-manual-approval-needed",
+          "codepipeline-pipeline-manual-approval-succeeded"
+        ],
+        "Targets": [
+          {
+            "TargetType": "SNS",
+            "TargetAddress": {
+              "Ref": "NotificationTopic"
+            }
+          }
+        ]
+      }
+    },
+    "NotificationTopic": {
+      "Type": "AWS::SNS::Topic",
+      "Properties": {
+        "TopicName": { "Ref": "AWS::StackName" }
+      }
+    },
+    "NotificationTopicPolicy": {
+      "Type": "AWS::SNS::TopicPolicy",
+      "Properties": {
+        "Topics": [
+          {
+            "Ref": "NotificationTopic"
+          }
+        ],
+        "PolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": [
+                  { "Fn::Sub": "codestar-notifications.${AWS::URLSuffix}" }
+                ]
+              },
+              "Action": "sns:Publish",
+              "Resource": { "Ref": "NotificationTopic" }
+            }
+          ]
+        }
+      }
+    },
+    "ChatbotRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": { "Fn::Sub": "chatbot.${AWS::URLSuffix}" }
+              },
+              "Action": "sts:AssumeRole"
+            }
+          ]
+        },
+        "ManagedPolicyArns": [
+          "arn:aws:iam::aws:policy/CloudWatchReadOnlyAccess"
+        ]
+      }
+    },
+    "SlackChannelConfiguration": {
+      "Type": "AWS::Chatbot::SlackChannelConfiguration",
+      "Properties": {
+        "ConfigurationName": { "Ref": "AWS::StackName" },
+        "IamRoleArn": { "Fn::GetAtt": ["ChatbotRole", "Arn"] },
+        "SlackChannelId": { "Ref": "SlackChannelId" },
+        "SlackWorkspaceId": { "Ref": "SlackWorkspaceId" },
+        "SnsTopicArns": [{ "Ref": "NotificationTopic" }]
+      }
+    },
+    "BuildProject": {
+      "Type": "AWS::CodeBuild::Project",
+      "Properties": {
+        "Name": { "Ref": "AWS::StackName" },
+        "Artifacts": {
+          "Type": "CODEPIPELINE"
+        },
+        "Environment": {
+          "ComputeType": "BUILD_GENERAL1_SMALL",
+          "Image": "aws/codebuild/standard:4.0",
+          "Type": "LINUX_CONTAINER",
+          "PrivilegedMode": true
+        },
+        "ServiceRole": { "Fn::GetAtt": ["BuildRole", "Arn"] },
+        "Source": {
+          "Type": "CODEPIPELINE"
+        },
+        "LogsConfig": {
+          "CloudWatchLogs": {
+            "Status": "ENABLED",
+            "GroupName": { "Ref": "LogGroup" },
+            "StreamName": "build"
+          }
+        }
+      }
+    },
+    "BuildRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": { "Fn::Sub": "codebuild.${AWS::URLSuffix}" }
+              },
+              "Action": "sts:AssumeRole"
+            }
+          ]
+        },
+        "ManagedPolicyArns": [{ "Ref": "BuildRolePolicy" }]
+      }
+    },
+    "BuildRolePolicy": {
+      "Type": "AWS::IAM::ManagedPolicy",
+      "Properties": {
+        "PolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Action": "ecr:GetAuthorizationToken",
+              "Resource": "*"
+            },
+            {
+              "Effect": "Allow",
+              "Action": ["logs:CreateLogStream", "logs:PutLogEvents"],
+              "Resource": { "Fn::GetAtt": ["LogGroup", "Arn"] }
+            },
+            {
+              "Effect": "Allow",
+              "Action": ["s3:GetObject", "s3:PutObject"],
+              "Resource": { "Fn::Sub": "${Bucket.Arn}/*" }
+            },
+            {
+              "Effect": "Allow",
+              "Action": [
+                "ecr:BatchCheckLayerAvailability",
+                "ecr:CompleteLayerUpload",
+                "ecr:InitiateLayerUpload",
+                "ecr:PutImage",
+                "ecr:UploadLayerPart"
+              ],
+              "Resource": { "Fn::GetAtt": ["Repository", "Arn"] }
+            },
+            {
+              "Effect": "Allow",
+              "Action": ["ssm:GetParameters"],
+              "Resource": {
+                "Fn::Sub": "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/default/*"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "CfnRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": { "Fn::Sub": "cloudformation.${AWS::URLSuffix}" }
+              },
+              "Action": "sts:AssumeRole"
+            }
+          ]
+        },
+        "ManagedPolicyArns": ["arn:aws:iam::aws:policy/AdministratorAccess"]
+      }
+    },
+    "LogGroup": {
+      "Type": "AWS::Logs::LogGroup",
+      "Properties": { "RetentionInDays": 365 }
+    }
+  }
+}
