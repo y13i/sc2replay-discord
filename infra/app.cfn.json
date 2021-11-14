@@ -322,14 +322,6 @@
     },
     "Service": {
       "Type": "AWS::ECS::Service",
-      "DependsOn": [
-        "RedisMountTarget0",
-        "RedisMountTarget1",
-        "RedisMountTarget2",
-        "PostgresMountTarget0",
-        "PostgresMountTarget1",
-        "PostgresMountTarget2"
-      ],
       "Properties": {
         "Cluster": {
           "Ref": "Cluster"
