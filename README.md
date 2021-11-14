@@ -2,6 +2,8 @@
 
 A Discord bot that responds with a summary of `.SC2Replay` files posted in a text channels.
 
+[Invite to your Discord server.](https://discord.com/api/oauth2/authorize?client_id=909174200068079716&permissions=2048&scope=bot)
+
 ## Deploy to AWS
 
 ```
