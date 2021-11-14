@@ -99,7 +99,7 @@ func handleMessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 	url := m.Message.Attachments[0].URL
 
-	if strings.HasSuffix(m.Message.Attachments[0].URL, ".SC2Replay") {
+	if strings.HasSuffix(url, ".SC2Replay") {
 		logger.Info("Replay file detected, ", url)
 
 		resp, err := http.Get(url)
