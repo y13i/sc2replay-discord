@@ -258,7 +258,7 @@
         },
         "ContainerDefinitions": [
           {
-            "Name": "domogayo",
+            "Name": "app",
             "Image": {
               "Ref": "ContainerImage"
             },

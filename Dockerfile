@@ -14,8 +14,8 @@ RUN go build \
     -o /go/bin/main \
     -ldflags '-s -w'
 
-
-FROM scratch as runner
+FROM debian:10-slim as runner
+RUN apt update && apt install -y ca-certificates 
 
 COPY --from=builder /go/bin/main /app/main
 
