@@ -23,7 +23,6 @@ const (
 	victoryEmoji  = ":trophy:"
 	defeatEmoji   = ":skull:"
 	tieEmoji      = ":infinity:"
-	chartEmoji    = "📊"
 )
 
 var (
@@ -70,8 +69,9 @@ func main() {
 	}
 
 	dg.AddHandler(handleMessageCreate)
+	dg.AddHandler(handleMessageReactionSafe)
 
-	dg.Identify.Intents = discordgo.IntentsGuildMessages
+	dg.Identify.Intents = discordgo.IntentsGuildMessages | discordgo.IntentsGuildMessageReactions
 
 	err = dg.Open()
 	if err != nil {
