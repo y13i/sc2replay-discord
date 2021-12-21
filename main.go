@@ -23,6 +23,7 @@ const(
 	victoryEmoji = ":trophy:"
 	defeatEmoji = ":skull:"
 	tieEmoji = ":infinity:"
+	chartEmoji = "📊"
 )
 
 var (
@@ -48,7 +49,7 @@ func getLogger(isProd bool) Logger {
 	} else {
 		_logger, err = zap.NewDevelopment()
 	}
-	
+
 	if err != nil {
 		panic(err)
 	}
@@ -78,7 +79,7 @@ func main() {
 	}
 
 	logger.Info("Bot is now running.")
-	
+
 	sc := make(chan os.Signal, 1)
 	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt)
 	<-sc
@@ -110,7 +111,7 @@ func handleMessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		// logger.Debug(resp)
 
 		defer resp.Body.Close()
-		
+
 		body, err := io.ReadAll(resp.Body)
 
 		if err != nil {
@@ -131,7 +132,7 @@ func handleMessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		logger.Debug(replay.InitData.GameDescription)
 		logger.Debug(replay.InitData.GameDescription.Region())
 		logger.Debug(replay.Details.Players())
-		
+
 		embed := &discordgo.MessageEmbed{
 			Title: m.Message.Attachments[0].Filename,
 			URL: url,
@@ -199,11 +200,17 @@ func handleMessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 		logger.Debug(embed)
 
-		newMessage, err:=s.ChannelMessageSendEmbed(m.ChannelID, embed)
+		newMessage, err := s.ChannelMessageSendEmbed(m.ChannelID, embed)
 		if err != nil {
 			logger.Error("Error sending message, ", err)
 			logger.Debug(err)
 		}
 		logger.Debug(newMessage)
+
+		err = s.MessageReactionAdd(m.ChannelID, newMessage.ID, chartEmoji)
+		if err != nil {
+			logger.Error("Error adding reactions to message, ", err)
+			logger.Debug(err)
+		}
 	}
 }
