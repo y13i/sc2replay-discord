@@ -17,13 +17,13 @@ import (
 	"go.uber.org/zap"
 )
 
-const(
+const (
 	entryPointPid = 1
-	unknownEmoji = ":question:"
-	victoryEmoji = ":trophy:"
-	defeatEmoji = ":skull:"
-	tieEmoji = ":infinity:"
-	chartEmoji = "📊"
+	unknownEmoji  = ":question:"
+	victoryEmoji  = ":trophy:"
+	defeatEmoji   = ":skull:"
+	tieEmoji      = ":infinity:"
+	chartEmoji    = "📊"
 )
 
 var (
@@ -34,14 +34,14 @@ type Logger struct {
 	*zap.SugaredLogger
 }
 
-func (l Logger)Debug(args ...interface{}) {
-	l.Debugf("", "\n" + pp.Sprint(args))
+func (l Logger) Debug(args ...interface{}) {
+	l.Debugf("", "\n"+pp.Sprint(args))
 }
 
 func getLogger(isProd bool) Logger {
 	var (
 		_logger *zap.Logger
-		err error
+		err     error
 	)
 
 	if isProd {
@@ -54,7 +54,7 @@ func getLogger(isProd bool) Logger {
 		panic(err)
 	}
 
-  return Logger{ _logger.Sugar() }
+	return Logger{_logger.Sugar()}
 }
 
 func main() {
@@ -135,26 +135,26 @@ func handleMessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 		embed := &discordgo.MessageEmbed{
 			Title: m.Message.Attachments[0].Filename,
-			URL: url,
+			URL:   url,
 			Fields: []*discordgo.MessageEmbedField{
 				{
-					Name: "Version",
+					Name:  "Version",
 					Value: replay.Header.VersionString(),
 				},
 				{
-					Name: "Region",
+					Name:  "Region",
 					Value: replay.InitData.GameDescription.Region().Code,
 				},
 				{
-					Name: "Time",
+					Name:  "Time",
 					Value: replay.Details.Time().String(),
 				},
 				{
-					Name: "Duration",
+					Name:  "Duration",
 					Value: replay.Header.Duration().String(),
 				},
 				{
-					Name: "Map",
+					Name:  "Map",
 					Value: replay.Details.Title(),
 				},
 			},
@@ -193,7 +193,7 @@ func handleMessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			}
 
 			embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
-				Name: fmt.Sprintf("Team #%d %s", teamIndex + 1, result),
+				Name:  fmt.Sprintf("Team #%d %s", teamIndex+1, result),
 				Value: strings.Join(playerStrings, "\n"),
 			})
 		}
