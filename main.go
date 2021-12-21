@@ -158,6 +158,9 @@ func handleMessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 					Value: replay.Details.Title(),
 				},
 			},
+			Footer: &discordgo.MessageEmbedFooter{
+				Text: "Reactions:\n" + chartEmoji + " - Show analysis",
+			},
 		}
 
 		teams := make([][]rep.Player, replay.InitData.GameDescription.MaxTeams())
