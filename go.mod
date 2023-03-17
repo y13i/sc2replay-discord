@@ -6,7 +6,7 @@ require (
 	github.com/bwmarrin/discordgo v0.25.0
 	github.com/gorilla/websocket v1.4.2 // indirect
 	github.com/icza/mpq v0.0.0-20210726201956-250230d5a464 // indirect
-	github.com/icza/s2prot v1.5.1-0.20220812133251-f9b3685e5bf0
+	github.com/icza/s2prot v1.5.1-0.20230131071830-3b87e07aa267
 	github.com/k0kubun/colorstring v0.0.0-20150214042306-9440f1994b88 // indirect
 	github.com/k0kubun/pp v3.0.1+incompatible
 	github.com/mattn/go-colorable v0.1.11 // indirect
