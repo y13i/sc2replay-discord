@@ -3,7 +3,7 @@ module github.com/y13i/sc2replay-discord
 go 1.17
 
 require (
-	github.com/bwmarrin/discordgo v0.25.0
+	github.com/bwmarrin/discordgo v0.27.1
 	github.com/gorilla/websocket v1.4.2 // indirect
 	github.com/icza/mpq v0.0.0-20210726201956-250230d5a464 // indirect
 	github.com/icza/s2prot v1.5.1-0.20230131071830-3b87e07aa267
