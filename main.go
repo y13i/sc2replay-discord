@@ -110,10 +110,10 @@ func handleMessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	logger.Debug(filename)
 
 	if strings.HasSuffix(filename, ".SC2Replay") {
-		logger.Info("Replay file detected, ", filename)
+		logger.Info("Replay file " + filename + " detected on message: https://discord.com/channels/" + m.GuildID + "/" + m.ChannelID + "/" + m.ID)
 
 		url := m.Message.Attachments[0].URL
-		logger.Debug("URL: ", url)
+		logger.Debug("Replay file URL: ", url)
 
 		resp, err := http.Get(url)
 		if err != nil {
