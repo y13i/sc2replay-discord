@@ -18,6 +18,8 @@ spec:
           image: ghcr.io/y13i/sc2replay-discord:main
           imagePullPolicy: Always
           env:
+            - name: IS_PROD
+              value: "true"
             - name: DISCORD_TOKEN
               valueFrom:
                 secretKeyRef:

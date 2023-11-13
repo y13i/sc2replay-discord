@@ -220,6 +220,7 @@ func handleMessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			logger.Error("Error sending message, ", err)
 			logger.Debug(err)
 		}
+		logger.Info("Message sent, ", newMessage.ID)
 		logger.Debug(newMessage)
 
 		err = s.MessageReactionAdd(m.ChannelID, newMessage.ID, chartEmoji)
