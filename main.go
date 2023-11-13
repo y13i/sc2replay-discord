@@ -63,7 +63,13 @@ func main() {
 	logger.Info("Started")
 	logger.Debug(os.Environ())
 
-	dg, err := discordgo.New("Bot " + os.Getenv("DISCORD_BOT_TOKEN"))
+	discordToken := os.Getenv("DISCORD_TOKEN")
+
+	if discordToken == "" {
+		logger.Fatal("No DISCORD_TOKEN provided")
+	}
+
+	dg, err := discordgo.New("Bot " + discordToken)
 	if err != nil {
 		logger.Fatal("Cannot create Discord session, ", err)
 	}

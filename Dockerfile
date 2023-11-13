@@ -18,5 +18,6 @@ FROM debian:12-slim as runner
 RUN apt update && apt install -y ca-certificates 
 
 COPY --from=builder /go/bin/main /app/main
+ENV DISCORD_TOKEN=""
 
 ENTRYPOINT ["/app/main"]

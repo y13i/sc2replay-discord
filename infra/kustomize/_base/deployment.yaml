@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sc2replay-discord
+spec:
+  selector:
+    matchLabels:
+      app: sc2replay-discord
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: sc2replay-discord
+    spec:
+      containers:
+        - name: sc2replay-discord
+          image: ghcr.io/y13i/sc2replay-discord:main
+          imagePullPolicy: Always
+          env:
+            - name: DISCORD_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: discord
+                  key: token
+                  optional: false
+          resources:
+            limits:
+              cpu: 512Mi
+              memory: 512Mi
