@@ -57,7 +57,8 @@ func getLogger(isProd bool) Logger {
 }
 
 func main() {
-	logger = getLogger(os.Getpid() == entryPointPid)
+	isProd := os.Getenv("IS_PROD") == "true" || os.Getpid() == entryPointPid
+	logger = getLogger(isProd)
 	defer logger.Sync()
 
 	logger.Info("Started")
