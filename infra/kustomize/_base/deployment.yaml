@@ -26,8 +26,8 @@ spec:
                   optional: false
           resources:
             limits:
-              cpu: 512Mi
+              cpu: 512m
               memory: 512Mi
             requests:
-              cpu: 32Mi
+              cpu: 32m
               memory: 32Mi
