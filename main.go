@@ -57,7 +57,8 @@ func getLogger(isProd bool) Logger {
 }
 
 func main() {
-	logger = getLogger(os.Getpid() == entryPointPid)
+	isProd := os.Getenv("IS_PROD") == "true" || os.Getpid() == entryPointPid
+	logger = getLogger(isProd)
 	defer logger.Sync()
 
 	logger.Info("Started")
@@ -101,13 +102,18 @@ func handleMessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	logger.Debug(m)
 
 	if len(m.Message.Attachments) == 0 {
+		logger.Debug("No attachments")
 		return
 	}
 
-	url := m.Message.Attachments[0].URL
+	filename := m.Message.Attachments[0].Filename
+	logger.Debug(filename)
 
-	if strings.HasSuffix(url, ".SC2Replay") {
-		logger.Info("Replay file detected, ", url)
+	if strings.HasSuffix(filename, ".SC2Replay") {
+		logger.Info("Replay file detected, ", filename)
+
+		url := m.Message.Attachments[0].URL
+		logger.Debug("URL: ", url)
 
 		resp, err := http.Get(url)
 		if err != nil {

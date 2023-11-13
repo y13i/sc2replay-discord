@@ -1,13 +1,1 @@
-export DISCORD_BOT_TOKEN=""
-
-export AWS_REGION=""
-export AWS_DEFAULT_REGION=$AWS_REGION
-export CFN_ROLE_ARN=""
-export APP_STACK_NAME=""
-
-export GITHUB_CONNECTION_ARN=""
-export FULL_REPOSITORY_ID=""
-export BRANCH_NAME="main"
-
-export SLACK_CHANNEL_ID=""
-export SLACK_WORKSPACE_ID=""
+export DISCORD_TOKEN=""
