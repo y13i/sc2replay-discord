@@ -6,6 +6,7 @@ import (
 	"html"
 	"io"
 	"net/http"
+	"net/url"
 	"os"
 	"os/signal"
 	"strings"
@@ -112,10 +113,10 @@ func handleMessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	if strings.HasSuffix(filename, ".SC2Replay") {
 		logger.Info("Replay file " + filename + " detected on message: https://discord.com/channels/" + m.GuildID + "/" + m.ChannelID + "/" + m.ID)
 
-		url := m.Message.Attachments[0].URL
-		logger.Debug("Replay file URL: ", url)
+		fileURL := m.Message.Attachments[0].URL
+		logger.Debug("Replay file URL: ", fileURL)
 
-		resp, err := http.Get(url)
+		resp, err := http.Get(fileURL)
 		if err != nil {
 			logger.Error("Error requesting attachment, ", err)
 			logger.Debug(err)
@@ -147,7 +148,7 @@ func handleMessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 		embed := &discordgo.MessageEmbed{
 			Title: m.Message.Attachments[0].Filename,
-			URL:   url,
+			URL:   fileURL,
 			Fields: []*discordgo.MessageEmbedField{
 				{
 					Name:  "Version",
@@ -166,8 +167,9 @@ func handleMessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 					Value: replay.Header.Duration().String(),
 				},
 				{
-					Name:  "Map",
-					Value: replay.Details.Title(),
+					Name: "Map",
+					Value: fmt.Sprintf("[%s](https://liquipedia.net/starcraft2/index.php?search=%s)", replay.Details.Title(),
+						url.QueryEscape(replay.Details.Title())),
 				},
 			},
 			Footer: &discordgo.MessageEmbedFooter{
