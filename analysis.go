@@ -7,6 +7,7 @@ import (
 	"io"
 	"mime/multipart"
 	"net/http"
+	"net/url"
 	"path"
 	"strings"
 
@@ -74,8 +75,13 @@ func handleMessageReaction(s *discordgo.Session, r *discordgo.MessageReactionAdd
 
 		embed := message.Embeds[0]
 
-		embedUrl := embed.URL
-		if !strings.HasSuffix(embedUrl, ".SC2Replay") {
+		embedUrl, err := url.Parse(embed.URL)
+		if err != nil {
+			logger.Error("Error parsing embed URL, ", err)
+			return err
+		}
+
+		if !strings.HasSuffix(embedUrl.Path, ".SC2Replay") {
 			return errors.New("embed url for reacted message is wrong format")
 		}
 
@@ -88,9 +94,9 @@ func handleMessageReaction(s *discordgo.Session, r *discordgo.MessageReactionAdd
 			return nil
 		}
 
-		_, filename := path.Split(embedUrl)
+		_, filename := path.Split(embedUrl.Path)
 
-		resp, err := http.Get(embedUrl)
+		resp, err := http.Get(embedUrl.String())
 		if err != nil {
 			logger.Error("Error requesting attachment, ", err)
 			return err
