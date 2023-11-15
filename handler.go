@@ -78,13 +78,25 @@ func handleMessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) error
 		logger.Debug(replay.InitData.GameDescription.Region())
 		logger.Debug(replay.Details.Players())
 
+		version := fmt.Sprintf(
+			"%v.%v.%v",
+			replay.Header.Version().Struct["major"],
+			replay.Header.Version().Struct["minor"],
+			replay.Header.Version().Struct["revision"],
+		)
+
 		embed := &discordgo.MessageEmbed{
 			Title: m.Message.Attachments[0].Filename,
 			URL:   fileURL,
 			Fields: []*discordgo.MessageEmbedField{
 				{
-					Name:  "Version",
-					Value: replay.Header.VersionString(),
+					Name: "Version",
+					Value: fmt.Sprintf(
+						"[%v](https://liquipedia.net/starcraft2/index.php?search=%v).%v",
+						version,
+						url.QueryEscape(fmt.Sprintf("Patch %v", version)),
+						replay.Header.Version().Struct["build"],
+					),
 				},
 				{
 					Name:  "Region",
