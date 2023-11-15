@@ -9,7 +9,8 @@ import (
 )
 
 const (
-	entryPointPid = 1
+	entryPointPid      = 1
+	envVarDiscordToken = "DISCORD_TOKEN"
 )
 
 var (
@@ -24,10 +25,10 @@ func main() {
 	logger.Info("Started")
 	logger.Debug(os.Environ())
 
-	discordToken := os.Getenv("DISCORD_TOKEN")
+	discordToken := os.Getenv(envVarDiscordToken)
 
 	if discordToken == "" {
-		logger.Fatal("No DISCORD_TOKEN provided")
+		logger.Fatal("No " + envVarDiscordToken + " provided")
 	}
 
 	dg, err := discordgo.New("Bot " + discordToken)
