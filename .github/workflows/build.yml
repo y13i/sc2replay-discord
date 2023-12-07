@@ -12,7 +12,7 @@ jobs:
       - uses: actions/checkout@v4
       - id: branch-name
         name: Get branch name
-        uses: tj-actions/branch-names@v7
+        uses: tj-actions/branch-names@v8
       - id: vars
         name: Get variables
         run: |
