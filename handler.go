@@ -39,13 +39,17 @@ func handleMessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) error
 		return nil
 	}
 
-	filename := m.Message.Attachments[0].Filename
-	logger.Debug(filename)
+	for _, attachment := range m.Message.Attachments {
+		logger.Debug(attachment)
 
-	if strings.HasSuffix(filename, ".SC2Replay") {
-		logger.Info("Replay file " + filename + " detected on message: https://discord.com/channels/" + m.GuildID + "/" + m.ChannelID + "/" + m.ID)
+		if !strings.HasSuffix(attachment.Filename, ".SC2Replay") {
+			logger.Debug("Not a replay file")
+			continue
+		}
 
-		fileURL := m.Message.Attachments[0].URL
+		logger.Info("Replay file " + attachment.Filename + " detected on message: https://discord.com/channels/" + m.GuildID + "/" + m.ChannelID + "/" + m.ID)
+
+		fileURL := attachment.URL
 		logger.Debug("Replay file URL: ", fileURL)
 
 		resp, err := http.Get(fileURL)
@@ -86,7 +90,7 @@ func handleMessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) error
 		)
 
 		embed := &discordgo.MessageEmbed{
-			Title: m.Message.Attachments[0].Filename,
+			Title: attachment.Filename,
 			URL:   fileURL,
 			Fields: []*discordgo.MessageEmbedField{
 				{
