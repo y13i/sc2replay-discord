@@ -47,7 +47,7 @@ func handleMessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) error
 			continue
 		}
 
-		logger.Info("Replay file " + attachment.Filename + " detected on message: https://discord.com/channels/" + m.GuildID + "/" + m.ChannelID + "/" + m.ID)
+		logger.Info("Replay file " + attachment.Filename + " detected on message: " + buildMessageURL(m.GuildID, m.ChannelID, m.ID))
 
 		fileURL := attachment.URL
 		logger.Debug("Replay file URL: ", fileURL)
@@ -183,8 +183,9 @@ func handleMessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) error
 			logger.Error("Error sending message, ", err)
 			logger.Debug(err)
 		}
-		logger.Info("Message sent, ", newMessage.ID)
 		logger.Debug(newMessage)
+
+		logger.Info("Message sent: " + buildMessageURL(m.GuildID, m.ChannelID, newMessage.ID))
 
 		err = s.MessageReactionAdd(m.ChannelID, newMessage.ID, chartEmoji)
 		if err != nil {
@@ -194,4 +195,10 @@ func handleMessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) error
 	}
 
 	return nil
+}
+
+func buildMessageURL(guildID string, channelID string, messageID string) string {
+	return fmt.Sprintf(
+		"https://discord.com/channels/%s/%s/%s", guildID, channelID, messageID,
+	)
 }
