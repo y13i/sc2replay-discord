@@ -178,7 +178,7 @@ func handleMessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) error
 
 		logger.Debug(embed)
 
-		newMessage, err := s.ChannelMessageSendEmbed(m.ChannelID, embed)
+		newMessage, err := s.ChannelMessageSendEmbedReply(m.ChannelID, embed, m.Reference())
 		if err != nil {
 			logger.Error("Error sending message, ", err)
 			logger.Debug(err)
