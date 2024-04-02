@@ -27,19 +27,19 @@ func handleMessageCreateSafe(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 }
 
-func handleMessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) error {
-	if m.Author.ID == s.State.User.ID {
+func handleMessageCreate(s *discordgo.Session, message *discordgo.MessageCreate) error {
+	if message.Author.ID == s.State.User.ID {
 		return nil
 	}
 
-	logger.Debug(m)
+	logger.Debug(message)
 
-	if len(m.Message.Attachments) == 0 {
+	if len(message.Message.Attachments) == 0 {
 		logger.Debug("No attachments")
 		return nil
 	}
 
-	for _, attachment := range m.Message.Attachments {
+	for _, attachment := range message.Message.Attachments {
 		logger.Debug(attachment)
 
 		if !strings.HasSuffix(attachment.Filename, ".SC2Replay") {
@@ -47,7 +47,7 @@ func handleMessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) error
 			continue
 		}
 
-		logger.Info("Replay file " + attachment.Filename + " detected on message: " + buildMessageURL(m.GuildID, m.ChannelID, m.ID))
+		logger.Info("Replay file " + attachment.Filename + " detected on message: " + buildMessageURL(message.GuildID, message.ChannelID, message.ID))
 
 		fileURL := attachment.URL
 		logger.Debug("Replay file URL: ", fileURL)
@@ -178,16 +178,16 @@ func handleMessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) error
 
 		logger.Debug(embed)
 
-		newMessage, err := s.ChannelMessageSendEmbedReply(m.ChannelID, embed, m.Reference())
+		newMessage, err := s.ChannelMessageSendEmbedReply(message.ChannelID, embed, message.Reference())
 		if err != nil {
 			logger.Error("Error sending message, ", err)
 			logger.Debug(err)
 		}
 		logger.Debug(newMessage)
 
-		logger.Info("Message sent: " + buildMessageURL(m.GuildID, m.ChannelID, newMessage.ID))
+		logger.Info("Message sent: " + buildMessageURL(message.GuildID, message.ChannelID, newMessage.ID))
 
-		err = s.MessageReactionAdd(m.ChannelID, newMessage.ID, chartEmoji)
+		err = s.MessageReactionAdd(message.ChannelID, newMessage.ID, chartEmoji)
 		if err != nil {
 			logger.Error("Error adding reactions to message, ", err)
 			logger.Debug(err)
