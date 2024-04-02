@@ -141,7 +141,20 @@ func handleMessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) error
 			result := unknownEmoji
 
 			for playerIndex, player := range players {
-				playerStrings[playerIndex] = fmt.Sprintf("%s (%s)", html.UnescapeString(player.Name), player.RaceString())
+				var searchName string
+				if strings.Contains(player.Name, "&gt;") {
+					s := strings.Split(player.Name, "&gt;")
+					searchName = s[len(s)-1]
+				} else {
+					searchName = player.Name
+				}
+
+				playerStrings[playerIndex] = fmt.Sprintf(
+					"[%s](https://sc2pulse.nephest.com/sc2/?type=search&name=%s#search) (%s)",
+					html.UnescapeString(player.Name),
+					searchName,
+					player.RaceString(),
+				)
 
 				if result == unknownEmoji {
 					switch player.Result().Enum.Name {

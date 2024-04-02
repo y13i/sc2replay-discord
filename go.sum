@@ -33,6 +33,8 @@ github.com/icza/s2prot v1.5.1-0.20231102230415-2f649b292b4a h1:j8NYhWBsp2v/c0KNH
 github.com/icza/s2prot v1.5.1-0.20231102230415-2f649b292b4a/go.mod h1:Aw3BgGOZ83Qkxmz90i22WFCMiDU4oOFT5D3hoDLBl3E=
 github.com/icza/s2prot v1.5.1 h1:l90BCd1IYeLzEvVMzqj3qggiYETeXl9mV0w3RPL8+mM=
 github.com/icza/s2prot v1.5.1/go.mod h1:Aw3BgGOZ83Qkxmz90i22WFCMiDU4oOFT5D3hoDLBl3E=
+github.com/icza/s2prot v1.5.2-0.20240331065411-f5e7593a4152 h1:J41BDi/2J8R42l00/yDcxfxTAD4QxkZeCiuN1dW7J+0=
+github.com/icza/s2prot v1.5.2-0.20240331065411-f5e7593a4152/go.mod h1:Aw3BgGOZ83Qkxmz90i22WFCMiDU4oOFT5D3hoDLBl3E=
 github.com/k0kubun/colorstring v0.0.0-20150214042306-9440f1994b88 h1:uC1QfSlInpQF+M0ao65imhwqKnz3Q2z/d8PWZRMQvDM=
 github.com/k0kubun/colorstring v0.0.0-20150214042306-9440f1994b88/go.mod h1:3w7q1U84EfirKl04SVQ/s7nPm1ZPhiXd34z40TNz36k=
 github.com/k0kubun/pp v3.0.1+incompatible h1:3tqvf7QgUnZ5tXO6pNAZlrvHgl6DvifjDrd9g2S9Z40=
