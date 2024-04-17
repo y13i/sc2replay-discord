@@ -6,3 +6,5 @@ on:
 jobs:
   build:
     uses: y13i/actions/.github/workflows/docker.yml@main
+    with:
+      dockerhub-access-token: ${{ secrets.DOCKERHUB_ACCESS_TOKEN }}
