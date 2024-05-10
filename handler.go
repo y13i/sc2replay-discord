@@ -73,6 +73,7 @@ func handleMessageCreate(s *discordgo.Session, message *discordgo.MessageCreate)
 		if err != nil {
 			logger.Error("Error opening replay, ", err)
 			logger.Debug(err)
+			return nil
 		}
 		// logger.Debug(replay)
 		logger.Debug(replay.Header)
