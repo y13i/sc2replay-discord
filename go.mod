@@ -1,6 +1,6 @@
 module github.com/y13i/sc2replay-discord
 
-go 1.21
+go 1.23
 
 require (
 	github.com/bwmarrin/discordgo v0.28.1
